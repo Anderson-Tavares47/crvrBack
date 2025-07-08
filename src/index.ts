@@ -29,6 +29,11 @@ app.use((req, res, next) => {
   next();
 });
 
+
+app.get('/', (req, res) => {
+  res.send('✅ Backend CRVR rodando com sucesso na Vercel!');
+});
+
 app.use('/api', routes);
 
 // ✅ Exporta o app para que a Vercel use como handler
