@@ -111,8 +111,8 @@ export async function obterManifestoPDF(req: Request, res: Response): Promise<vo
         login: LOGIN,
         senha: SENHA,
         manifestoCodigo: dadosExtraidos.numeroMTR,
-        cnpTransportador: dadosExtraidos.transportador?.cnpj,
-        cnpDestinador: dadosExtraidos.destinador?.cnpj
+        cnpTransportador: normalizarCnpj(dadosExtraidos.transportador?.cnpj || ''),
+        cnpDestinador: normalizarCnpj(dadosExtraidos.destinador?.cnpj || '')
       },
       {
         headers: { 'Content-Type': 'application/json' },
