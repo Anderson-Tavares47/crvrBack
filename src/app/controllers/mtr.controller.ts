@@ -138,7 +138,8 @@ export async function obterManifestoPDF(req: Request, res: Response): Promise<vo
       OK: 200,          // MTR válido (não recebido nem cancelado)
       RECEBIDO: 405,    // MTR já recebido (código 3)
       CANCELADO: 406,    // MTR cancelado (código 4)
-      DESTINADOR_INVALIDO: 407 // CNPJ do destinador diferente do gerador
+      DESTINADOR_INVALIDO: 407, // CNPJ do destinador diferente do gerador
+      TEMPORARIO: 408
     };
 
     // Validação do status do MTR (única que afeta isValid)
@@ -154,6 +155,10 @@ export async function obterManifestoPDF(req: Request, res: Response): Promise<vo
       statusValidacao = STATUS.CANCELADO;
       isValid = false;
       validationMessage = 'MTR cancelado';
+    }} else if (situacaoCodigo === '9') {
+      statusValidacao = STATUS.TEMPORARIO;
+      isValid = false;
+      validationMessage = 'MTR temporario';
     }
 
     // Validação do CNPJ do destinador (independente, não afeta isValid)
