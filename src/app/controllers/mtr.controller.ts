@@ -155,11 +155,7 @@ export async function obterManifestoPDF(req: Request, res: Response): Promise<vo
       statusValidacao = STATUS.CANCELADO;
       isValid = false;
       validationMessage = 'MTR cancelado';
-    } else if (situacaoCodigo === '9') {
-      statusValidacao = STATUS.TEMPORARIO;
-      isValid = false;
-      validationMessage = 'MTR temporario';
-    }
+    } 
 
     // Validação do CNPJ do destinador (independente, não afeta isValid)
     const cnpjGeradorNormalizado = normalizarCnpj(CNP_GERADOR || null);
