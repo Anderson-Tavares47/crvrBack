@@ -18,7 +18,104 @@ function extrairCampo(texto: string, regex: RegExp): string | null {
 }
 
 // Função que extrai todos os dados do texto do PDF
+// export function extrairTodosDados(texto: string) {
+//   return {
+//     numeroMTR: extrairCampo(texto, /MTR nº (\d+)/),
+//     dataEmissao: extrairCampo(texto, /data da emissão:\s*(\d{2}\/\d{2}\/\d{4})/i),
+//     dataTransporte: extrairCampo(texto, /data do transporte:\s*(\d{2}\/\d{2}\/\d{4})/i),
+//     dataRecebimento: extrairCampo(texto, /data do recebimento:\s*(\d{2}\/\d{2}\/\d{4})/i),
+
+//     gerador: {
+//       nome: extrairCampo(texto, /Identificação do Gerador\s*([^\n]+)/i),
+//       municipio: extrairCampo(texto, /Identificação do Gerador[\s\S]*?Município:\s*(.+?)\n/i),
+//       estado: extrairCampo(texto, /Identificação do Gerador[\s\S]*?Estado:\s*(\w+)/i),
+//       cnpj: extrairCampo(texto, /Identificação do Gerador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
+//       razaoSocial: extrairCampo(texto, /Identificação do Gerador[\s\S]*?Razão Social:\s*(.*?)\s*(Telefone|Fax|Estado|Município|CPF|$)/i)
+//     },
+
+//     transportador: {
+//       placa: extrairCampo(texto, /Placa do Veículo\s*\n(.+)/i),
+//       nomeMotorista: extrairCampo(texto, /Nome do Motorista\s*\n(.+)/i),
+//       cnpj: extrairCampo(texto, /Identificação do Transportador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
+//       endereco: extrairCampo(texto, /Identificação do Transportador[\s\S]*?Endereço:\s*([^\n]+)/i),
+//       municipio: extrairCampo(texto, /Identificação do Transportador[\s\S]*?Município:\s*([^\n]+)/i)
+//     },
+
+//     destinador: {
+//       razaoSocial: extrairCampo(texto, /Identificação do Destinador\s*([^\n]+)/i),
+//       cnpj: extrairCampo(texto, /Identificação do Destinador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
+//       endereco: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Endereço:\s*([^\n]+)/i),
+//       municipio: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Município:\s*([^\n]+)/i),
+//       estado: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Estado:\s*(\w+)/i)
+//     },
+
+//     residuo: {
+//       item: extrairCampo(texto, /Item\.\s*(\d+)/),
+//       codigoIbama: extrairCampo(texto, /(\d{6}\(\*\))\s*-\s*Lixiviados/i),
+//       denominacao: extrairCampo(texto, /-\s*(Lixiviados.+?)\n/i),
+//       estadoFisico: extrairCampo(texto, /Estado Físico\s*([^\n]+)/i),
+//       classe: extrairCampo(texto, /Classe\s*([^\n]+)/i),
+//       acondicionamento: extrairCampo(texto, /Acondicionamento\s*([^\n]+)/i),
+//       quantidade: extrairCampo(texto, /Tonelada\s*(\d+,\d+)/),
+//       tecnologia: extrairCampo(texto, /Tecnologia\s*([^\n]+)/i),
+//       onu: extrairCampo(texto, /ONU\s*(\d{4})/)
+//     }
+//   };
+// }
+
+
 export function extrairTodosDados(texto: string) {
+  const extrairCampo = (texto: string, regex: RegExp): string | null => {
+    const match = texto.match(regex);
+    return match ? match[1].trim() : null;
+  }; 
+
+  const limparValor = (valor: string | null) => valor ? valor.replace(/\n/g, ' ').trim() : null;
+
+  // Extrai seções do texto
+  const secaoDestinador = texto.match(/Identificação do Destinador([\s\S]*?)(?=Identificação dos Resíduos|Observações do Gerador|$)/i)?.[1] || '';
+  const linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
+  let linhaResiduo = linhaResMatch?.[0] || '';
+
+  linhaResiduo = linhaResiduo
+    .replace(/([a-z])([A-Z])/g, '$1 $2')
+    .replace(/([A-Z]{2,3})(E\d{2})/, '$1 $2')
+    .replace(/(E\d{2})(-?\s*[A-Za-z]+)/, '$1 - $2')
+    .replace(/Tonelada\s*(\d+,\d+)/, 'Tonelada $1')
+    .replace(/\s{2,}/g, ' ')
+
+  const tecnologia = extrairCampo(linhaResiduo, /Tonelada\s*[\d,.]+\s*(\w+)/);
+
+  const item = extrairCampo(linhaResiduo, /^\s*(\d+)\./);
+  const codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+
+  const denominacao = (() => {
+    const afterHifen = linhaResiduo.split('-')[1] || '';
+    return afterHifen
+      .replace(/(Sólido|Líquido|Gasoso).*/i, '')
+      .replace(/II[A-Z]?.*/i, '')
+      .replace(/E\d{2}.*/i, '')
+      .replace(/Tonelada.*/i, '')
+      .trim();
+  })();
+
+  const estadoFisico = extrairCampo(linhaResiduo, /(Sólido|Líquido|Gasoso)/);
+  const classe = extrairCampo(linhaResiduo, /\b(I{1,3}[A-Z]?)\b/);
+  const acondicionamento = extrairCampo(linhaResiduo, /(E\d{2}\s*-\s*[^\s]+)/);
+  const quantidade = extrairCampo(linhaResiduo, /Tonelada\s+([\d,.]+)/);
+  const unidade = extrairCampo(linhaResiduo, /\b(Tonelada|Kg|Litro|Unidade)\b/i);
+
+  const residuo = {
+    item,
+    codigoIbama,
+    denominacao,
+    estadoFisico,
+    classe,
+    acondicionamento,
+    quantidade,
+    tecnologia,
+    unidade
+  };
   return {
     numeroMTR: extrairCampo(texto, /MTR nº (\d+)/),
     dataEmissao: extrairCampo(texto, /data da emissão:\s*(\d{2}\/\d{2}\/\d{4})/i),
@@ -29,37 +126,27 @@ export function extrairTodosDados(texto: string) {
       nome: extrairCampo(texto, /Identificação do Gerador\s*([^\n]+)/i),
       municipio: extrairCampo(texto, /Identificação do Gerador[\s\S]*?Município:\s*(.+?)\n/i),
       estado: extrairCampo(texto, /Identificação do Gerador[\s\S]*?Estado:\s*(\w+)/i),
-      cnpj: extrairCampo(texto, /Identificação do Gerador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
+      cnpj: extrairCampo(texto, /Identificação do Transportador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
       razaoSocial: extrairCampo(texto, /Identificação do Gerador[\s\S]*?Razão Social:\s*(.*?)\s*(Telefone|Fax|Estado|Município|CPF|$)/i)
     },
 
     transportador: {
-      placa: extrairCampo(texto, /Placa do Veículo\s*\n(.+)/i),
-      nomeMotorista: extrairCampo(texto, /Nome do Motorista\s*\n(.+)/i),
-      cnpj: extrairCampo(texto, /Identificação do Transportador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
-      endereco: extrairCampo(texto, /Identificação do Transportador[\s\S]*?Endereço:\s*([^\n]+)/i),
+      placa: extrairCampo(texto, /\b([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/),
+      nomeMotorista: extrairCampo(texto, /Identificação do Destinador\s+([^\n]+)\n/i),
+      cnpj: extrairCampo(texto, /Nome do Responsável pela Emissão[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
+      endereco: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Endereço:\s*([^\n]+)/i),
       municipio: extrairCampo(texto, /Identificação do Transportador[\s\S]*?Município:\s*([^\n]+)/i)
     },
 
     destinador: {
-      razaoSocial: extrairCampo(texto, /Identificação do Destinador\s*([^\n]+)/i),
+      razaoSocial: extrairCampo(texto, /Razão Social:\s*([^\n]+)/i),
       cnpj: extrairCampo(texto, /Identificação do Destinador[\s\S]*?CPF\/CNPJ:\s*([\d./-]+)/i),
-      endereco: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Endereço:\s*([^\n]+)/i),
-      municipio: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Município:\s*([^\n]+)/i),
-      estado: extrairCampo(texto, /Identificação do Destinador[\s\S]*?Estado:\s*(\w+)/i)
+      endereco: extrairCampo(texto, /Endereço:\s*(.+)/i),
+      municipio: extrairCampo(secaoDestinador, /Município:\s*(.+)/i),
+      estado: extrairCampo(secaoDestinador, /Estado:\s*([A-Z]{2})/i)
     },
 
-    residuo: {
-      item: extrairCampo(texto, /Item\.\s*(\d+)/),
-      codigoIbama: extrairCampo(texto, /(\d{6}\(\*\))\s*-\s*Lixiviados/i),
-      denominacao: extrairCampo(texto, /-\s*(Lixiviados.+?)\n/i),
-      estadoFisico: extrairCampo(texto, /Estado Físico\s*([^\n]+)/i),
-      classe: extrairCampo(texto, /Classe\s*([^\n]+)/i),
-      acondicionamento: extrairCampo(texto, /Acondicionamento\s*([^\n]+)/i),
-      quantidade: extrairCampo(texto, /Tonelada\s*(\d+,\d+)/),
-      tecnologia: extrairCampo(texto, /Tecnologia\s*([^\n]+)/i),
-      onu: extrairCampo(texto, /ONU\s*(\d{4})/)
-    }
+    residuo: residuo
   };
 }
 
