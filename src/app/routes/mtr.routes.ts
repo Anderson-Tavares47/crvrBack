@@ -6,6 +6,7 @@ import { obterListaClasse } from '../controllers/listaClasse.controller';
 import { obterListaEstadoFisico } from '../controllers/listaEstadoFisico.controller';
 import { obterListaAcondicionamento } from '../controllers/listaAcondicionamento.controller';
 import { obterListaTecnologia } from '../controllers/listaTecnologia.controller';
+import { enviarLoteMTR } from '../controllers/enviarMtr.controller';
 
 const router = Router();
 
@@ -24,5 +25,6 @@ router.post('/classe', obterListaClasse);
 router.post('/estado-fisico', obterListaEstadoFisico);
 router.post('/acondicionamento', obterListaAcondicionamento);
 router.post('/tecnologia', obterListaTecnologia);
+router.post('/enviar-mtr', enviarLoteMTR);
 
 export default router;
