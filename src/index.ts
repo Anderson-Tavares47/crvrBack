@@ -18,9 +18,11 @@
 // });
 
 import express from 'express';
+import cors from 'cors';
 import routes from './app/routes'; // ✅ importa corretamente
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 // Middleware de log
