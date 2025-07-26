@@ -74,8 +74,17 @@ export function extrairTodosDados(texto: string) {
 
   // Extrai seções do texto
   const secaoDestinador = texto.match(/Identificação do Destinador([\s\S]*?)(?=Identificação dos Resíduos|Observações do Gerador|$)/i)?.[1] || '';
-  const linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
-  let linhaResiduo = linhaResMatch?.[0] || '';
+  // const linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
+  // let linhaResiduo = linhaResMatch?.[0] || '';
+
+  let linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
+
+// Se não encontrou com a primeira regex, tenta uma alternativa mais abrangente
+if (!linhaResMatch) {
+  linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada\s*\d{1,3},\d{3,5}[\s\S]*?(Triagem|Armazenamento|Incineração|Coprocessamento|Valorização)?/im);
+}
+
+let linhaResiduo = linhaResMatch?.[0] || '';
 
   linhaResiduo = linhaResiduo
     .replace(/([a-z])([A-Z])/g, '$1 $2')
