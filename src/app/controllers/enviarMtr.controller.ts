@@ -38,7 +38,7 @@ export async function enviarLoteMTR(req: Request, res: Response): Promise<void> 
   console.log(payloadCorrigido, 'Payload corrigido para envio');
 
   try {
-    const url = `https://mtr.fepam.rs.gov.br/mtrservice/receberManifesto`;
+    const url = `https://mtr.fepam.rs.gov.br/mtrservice/receberManifestoLote`;
 
     const response = await axios.post(url, payloadCorrigido, {
       headers: { 'Content-Type': 'application/json' },
