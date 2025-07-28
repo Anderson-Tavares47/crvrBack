@@ -49,11 +49,13 @@ export async function enviarLoteMTR(req: Request, res: Response): Promise<void> 
       validateStatus: () => true
     });
 
-     console.log(response, 'resposta do envio do lote MTR');
 
     if (typeof response.data === 'string') {
       try {
         const json = JSON.parse(response.data);
+
+         console.log(response, 'resposta do envio do lote MTR');
+         console.log(response.data, 'resposta do envio do lote MTR .data');
         res.status(200).json({ success: true, data: json });
       } catch (e) {
         res.status(500).json({
