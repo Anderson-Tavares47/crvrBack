@@ -77,7 +77,11 @@ export function extrairTodosDados(texto: string) {
   // const linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
   // let linhaResiduo = linhaResMatch?.[0] || '';
 
-  let linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
+  // let linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
+   let linhaResMatch =
+  texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im) ||
+  texto.match(/^\s*\d+\.\s*Grupo D[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im) ||
+  texto.match(/^\s*\d+\.\s*[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im);
 
 // Se não encontrou com a primeira regex, tenta uma alternativa mais abrangente
 if (!linhaResMatch) {
@@ -96,7 +100,12 @@ let linhaResiduo = linhaResMatch?.[0] || '';
   const tecnologia = extrairCampo(linhaResiduo, /Tonelada\s*[\d,.]+\s*(\w+)/);
 
   const item = extrairCampo(linhaResiduo, /^\s*(\d+)\./);
-  const codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+  // const codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+  let codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+
+if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
+  codigoIbama = '200399'; // fallback para resíduos do tipo Grupo D
+}
 
   const denominacao = (() => {
     const afterHifen = linhaResiduo.split('-')[1] || '';
