@@ -78,44 +78,99 @@ export function extrairTodosDados(texto: string) {
   // let linhaResiduo = linhaResMatch?.[0] || '';
 
   // let linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?\d{1,3},\d{3,5}[\s\S]*?Aterro/im);
-   let linhaResMatch =
-  texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im) ||
-  texto.match(/^\s*\d+\.\s*Grupo D[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im) ||
-  texto.match(/^\s*\d+\.\s*[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im);
+//    let linhaResMatch =
+//   texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im) ||
+//   texto.match(/^\s*\d+\.\s*Grupo D[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im) ||
+//   texto.match(/^\s*\d+\.\s*[\s\S]*?Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização)/im);
 
-// Se não encontrou com a primeira regex, tenta uma alternativa mais abrangente
-if (!linhaResMatch) {
-  linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada\s*\d{1,3},\d{3,5}[\s\S]*?(Triagem|Armazenamento|Incineração|Coprocessamento|Valorização)?/im);
-}
+// // Se não encontrou com a primeira regex, tenta uma alternativa mais abrangente
+// if (!linhaResMatch) {
+//   linhaResMatch = texto.match(/^\s*\d+\.\s*\d{6}[\s\S]*?Tonelada\s*\d{1,3},\d{3,5}[\s\S]*?(Triagem|Armazenamento|Incineração|Coprocessamento|Valorização)?/im);
+// }
 
-let linhaResiduo = linhaResMatch?.[0] || '';
+// let linhaResiduo = linhaResMatch?.[0] || '';
 
-  linhaResiduo = linhaResiduo
+//   linhaResiduo = linhaResiduo
+//     .replace(/([a-z])([A-Z])/g, '$1 $2')
+//     .replace(/([A-Z]{2,3})(E\d{2})/, '$1 $2')
+//     .replace(/(E\d{2})(-?\s*[A-Za-z]+)/, '$1 - $2')
+//     .replace(/Tonelada\s*(\d+,\d+)/, 'Tonelada $1')
+//     .replace(/\s{2,}/g, ' ')
+
+//   const tecnologia = extrairCampo(linhaResiduo, /Tonelada\s*[\d,.]+\s*(\w+)/);
+
+//   const item = extrairCampo(linhaResiduo, /^\s*(\d+)\./);
+//   // const codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+//   let codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+
+// if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
+//   codigoIbama = '200399'; // fallback para resíduos do tipo Grupo D
+// }
+
+//   const denominacao = (() => {
+//     const afterHifen = linhaResiduo.split('-')[1] || '';
+//     return afterHifen
+//       .replace(/(Sólido|Líquido|Gasoso).*/i, '')
+//       .replace(/II[A-Z]?.*/i, '')
+//       .replace(/E\d{2}.*/i, '')
+//       .replace(/Tonelada.*/i, '')
+//       .trim();
+//   })();
+
+//   const estadoFisico = extrairCampo(linhaResiduo, /(Sólido|Líquido|Gasoso)/);
+//   const classe = extrairCampo(linhaResiduo, /\b(I{1,3}[A-Z]?)\b/);
+//   const acondicionamento = extrairCampo(linhaResiduo, /(E\d{2}\s*-\s*[^\s]+)/);
+//   const quantidade = extrairCampo(linhaResiduo, /Tonelada\s+([\d,.]+)/);
+//   const unidade = extrairCampo(linhaResiduo, /\b(Tonelada|Kg|Litro|Unidade)\b/i);
+
+//   const residuo = {
+//     item,
+//     codigoIbama,
+//     denominacao,
+//     estadoFisico,
+//     classe,
+//     acondicionamento,
+//     quantidade,
+//     tecnologia,
+//     unidade
+//   };
+
+// 🔁 NOVO BLOCO que substitui toda a extração de 1 resíduo:
+const residuos: any[] = [];
+
+// const blocosResiduos = texto.match(/^\s*\d+\..*?(Tonelada[\s\S]*?(Aterro|Triagem|Armazenamento|Incineração|Valorização))/gim) || [];
+
+const blocosResiduos = [
+  ...texto.matchAll(/^\s*\d+\..*?(?=\n\s*\d+\.\s|\nJustificativa|\nObservação do Recebimento|\nResiduo|\n$)/gms)
+];
+
+
+for (const match of blocosResiduos) {
+  const bloco = match[0];
+
+  const linhaResiduo = bloco
     .replace(/([a-z])([A-Z])/g, '$1 $2')
     .replace(/([A-Z]{2,3})(E\d{2})/, '$1 $2')
     .replace(/(E\d{2})(-?\s*[A-Za-z]+)/, '$1 - $2')
     .replace(/Tonelada\s*(\d+,\d+)/, 'Tonelada $1')
-    .replace(/\s{2,}/g, ' ')
+    .replace(/\s{2,}/g, ' ');
 
   const tecnologia = extrairCampo(linhaResiduo, /Tonelada\s*[\d,.]+\s*(\w+)/);
-
   const item = extrairCampo(linhaResiduo, /^\s*(\d+)\./);
-  // const codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+
   let codigoIbama = extrairCampo(linhaResiduo, /\b(\d{6})\b/);
+  if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
+    codigoIbama = '200399';
+  }
 
-if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
-  codigoIbama = '200399'; // fallback para resíduos do tipo Grupo D
-}
+ const denominacao = (() => {
+  const match = linhaResiduo.match(/\d+\.\s*(Grupo D.*?)\s*(Sólido|Líquido|Gasoso)/is);
+  if (match) return match[1].replace(/\s+/g, ' ').trim();
 
-  const denominacao = (() => {
-    const afterHifen = linhaResiduo.split('-')[1] || '';
-    return afterHifen
-      .replace(/(Sólido|Líquido|Gasoso).*/i, '')
-      .replace(/II[A-Z]?.*/i, '')
-      .replace(/E\d{2}.*/i, '')
-      .replace(/Tonelada.*/i, '')
-      .trim();
-  })();
+  const fallback = linhaResiduo.match(/\d+\.\s*(.*?)\s*(Sólido|Líquido|Gasoso)/is);
+  return fallback ? fallback[1].replace(/\s+/g, ' ').trim() : '';
+})();
+
 
   const estadoFisico = extrairCampo(linhaResiduo, /(Sólido|Líquido|Gasoso)/);
   const classe = extrairCampo(linhaResiduo, /\b(I{1,3}[A-Z]?)\b/);
@@ -123,7 +178,7 @@ if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
   const quantidade = extrairCampo(linhaResiduo, /Tonelada\s+([\d,.]+)/);
   const unidade = extrairCampo(linhaResiduo, /\b(Tonelada|Kg|Litro|Unidade)\b/i);
 
-  const residuo = {
+  residuos.push({
     item,
     codigoIbama,
     denominacao,
@@ -133,7 +188,11 @@ if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
     quantidade,
     tecnologia,
     unidade
-  };
+  });
+}
+
+  
+  
   return {
     numeroMTR: extrairCampo(texto, /MTR nº (\d+)/),
     dataEmissao: extrairCampo(texto, /data da emissão:\s*(\d{2}\/\d{2}\/\d{4})/i),
@@ -164,7 +223,7 @@ if (!codigoIbama && linhaResiduo.includes('Grupo D')) {
       estado: extrairCampo(secaoDestinador, /Estado:\s*([A-Z]{2})/i)
     },
 
-    residuo: residuo
+    residuos: residuos
   };
 }
 
